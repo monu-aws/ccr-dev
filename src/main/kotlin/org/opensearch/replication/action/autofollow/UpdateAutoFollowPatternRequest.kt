@@ -25,6 +25,7 @@ import org.opensearch.core.xcontent.ToXContent
 import org.opensearch.core.xcontent.ToXContentObject
 import org.opensearch.core.xcontent.XContentBuilder
 import org.opensearch.core.xcontent.XContentParser
+import org.opensearch.replication.util.ValidationUtil.validatePattern
 import java.util.Collections
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
@@ -110,11 +111,14 @@ class UpdateAutoFollowPatternRequest: AcknowledgedRequest<UpdateAutoFollowPatter
         }
 
         if(action == Action.REMOVE) {
-            if(pattern != null) {
+            if (pattern != null) {
                 validationException.addValidationError("Unexpected pattern")
             }
-        } else if(pattern == null) {
-            validationException.addValidationError("Missing pattern")
+        } else {
+                if(pattern == null)
+                    validationException.addValidationError("Missing pattern")
+                else
+                    validatePattern(pattern, validationException)
         }
 
         return if(validationException.validationErrors().isEmpty()) return null else validationException
